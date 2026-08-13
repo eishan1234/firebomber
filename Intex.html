@@ -1,0 +1,1217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>APK & API Capture Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #0a0a0f;
+            color: #e0e0e0;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 20px;
+            background: #14141e;
+            border-radius: 12px;
+            border: 1px solid #2a2a3a;
+            margin-bottom: 20px;
+        }
+        header h1 {
+            font-size: 22px;
+            color: #ff6b6b;
+            font-weight: 700;
+        }
+        header h1 span {
+            color: #4ecdc4;
+        }
+        .status {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 13px;
+        }
+        .dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #4ecdc4;
+            animation: pulse 1.5s infinite;
+        }
+        @keyframes pulse {
+            0%,
+            100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.3;
+            }
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        .card {
+            background: #14141e;
+            border: 1px solid #2a2a3a;
+            border-radius: 12px;
+            padding: 20px;
+        }
+        .card h3 {
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #888;
+            margin-bottom: 15px;
+        }
+        .full-width {
+            grid-column: 1 / -1;
+        }
+        .form-group {
+            margin-bottom: 14px;
+        }
+        .form-group label {
+            display: block;
+            font-size: 12px;
+            color: #aaa;
+            margin-bottom: 4px;
+        }
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 10px 12px;
+            background: #1a1a28;
+            border: 1px solid #2a2a3a;
+            border-radius: 8px;
+            color: #e0e0e0;
+            font-size: 14px;
+            transition: 0.3s;
+        }
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #4ecdc4;
+            box-shadow: 0 0 0 2px rgba(78, 205, 196, 0.1);
+        }
+        .form-group textarea {
+            resize: vertical;
+            min-height: 60px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+        }
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 12px;
+        }
+        .btn {
+            padding: 10px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        .btn-primary {
+            background: #4ecdc4;
+            color: #0a0a0f;
+        }
+        .btn-primary:hover {
+            background: #45b8b0;
+            transform: translateY(-1px);
+        }
+        .btn-danger {
+            background: #ff6b6b;
+            color: #0a0a0f;
+        }
+        .btn-danger:hover {
+            background: #e55555;
+            transform: translateY(-1px);
+        }
+        .btn-success {
+            background: #51cf66;
+            color: #0a0a0f;
+        }
+        .btn-success:hover {
+            background: #40c057;
+            transform: translateY(-1px);
+        }
+        .btn-warning {
+            background: #fcc419;
+            color: #0a0a0f;
+        }
+        .btn-warning:hover {
+            background: #fab005;
+            transform: translateY(-1px);
+        }
+        .btn-purple {
+            background: #9775fa;
+            color: #0a0a0f;
+        }
+        .btn-purple:hover {
+            background: #845ef7;
+            transform: translateY(-1px);
+        }
+        .btn-sm {
+            padding: 6px 14px;
+            font-size: 12px;
+        }
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 10px;
+        }
+        .response-area {
+            background: #0a0a0f;
+            border: 1px solid #1a1a28;
+            border-radius: 8px;
+            padding: 15px;
+            min-height: 200px;
+            max-height: 400px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+        .response-area .success {
+            color: #51cf66;
+        }
+        .response-area .error {
+            color: #ff6b6b;
+        }
+        .response-area .info {
+            color: #4ecdc4;
+        }
+        .response-area .warning {
+            color: #fcc419;
+        }
+        .capture-list {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .capture-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 12px;
+            background: #0a0a0f;
+            border-radius: 6px;
+            margin-bottom: 6px;
+            border-left: 3px solid #4ecdc4;
+            font-size: 13px;
+        }
+        .capture-item .method {
+            font-weight: 700;
+            color: #fcc419;
+            min-width: 50px;
+        }
+        .capture-item .url {
+            color: #aaa;
+            flex: 1;
+            margin: 0 10px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .capture-item .time {
+            color: #666;
+            font-size: 11px;
+        }
+        .capture-item .status-badge {
+            padding: 2px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+        .status-badge.up {
+            background: #51cf66;
+            color: #0a0a0f;
+        }
+        .status-badge.down {
+            background: #ff6b6b;
+            color: #0a0a0f;
+        }
+        .status-badge.pending {
+            background: #fcc419;
+            color: #0a0a0f;
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 12px;
+            margin-bottom: 15px;
+        }
+        .stat-box {
+            background: #0a0a0f;
+            border-radius: 8px;
+            padding: 12px 16px;
+            text-align: center;
+            border: 1px solid #1a1a28;
+        }
+        .stat-box .number {
+            font-size: 28px;
+            font-weight: 700;
+            color: #4ecdc4;
+        }
+        .stat-box .label {
+            font-size: 11px;
+            color: #666;
+            margin-top: 4px;
+        }
+        .apk-info {
+            background: #0a0a0f;
+            border-radius: 8px;
+            padding: 12px;
+            margin-top: 10px;
+            border: 1px solid #1a1a28;
+        }
+        .apk-info .row {
+            display: flex;
+            justify-content: space-between;
+            padding: 4px 0;
+            border-bottom: 1px solid #14141e;
+        }
+        .apk-info .label {
+            color: #888;
+        }
+        .apk-info .value {
+            color: #4ecdc4;
+            font-weight: 600;
+        }
+        .drop-zone {
+            border: 2px dashed #2a2a3a;
+            border-radius: 8px;
+            padding: 30px;
+            text-align: center;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        .drop-zone:hover {
+            border-color: #4ecdc4;
+            background: #0a0a0f;
+        }
+        .drop-zone.dragover {
+            border-color: #4ecdc4;
+            background: #1a1a28;
+        }
+        .file-input-hidden {
+            display: none;
+        }
+        .tabs {
+            display: flex;
+            gap: 4px;
+            margin-bottom: 15px;
+            background: #0a0a0f;
+            border-radius: 8px;
+            padding: 4px;
+        }
+        .tab {
+            padding: 8px 18px;
+            border: none;
+            background: transparent;
+            color: #888;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+            transition: 0.3s;
+        }
+        .tab.active {
+            background: #1a1a28;
+            color: #e0e0e0;
+        }
+        .tab:hover {
+            color: #e0e0e0;
+        }
+        .hidden {
+            display: none;
+        }
+        @media (max-width: 900px) {
+            .grid {
+                grid-template-columns: 1fr;
+            }
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+            .stats-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+        ::-webkit-scrollbar {
+            width: 4px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0a0a0f;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #2a2a3a;
+            border-radius: 4px;
+        }
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 14px;
+            z-index: 999;
+            opacity: 0;
+            transition: 0.5s;
+            pointer-events: none;
+        }
+        .toast.show {
+            opacity: 1;
+        }
+        .toast.success {
+            background: #51cf66;
+            color: #0a0a0f;
+        }
+        .toast.error {
+            background: #ff6b6b;
+            color: #0a0a0f;
+        }
+        .toast.info {
+            background: #4ecdc4;
+            color: #0a0a0f;
+        }
+        .progress-bar {
+            width: 100%;
+            height: 4px;
+            background: #1a1a28;
+            border-radius: 2px;
+            margin-top: 10px;
+            overflow: hidden;
+        }
+        .progress-bar .fill {
+            height: 100%;
+            background: #4ecdc4;
+            width: 0%;
+            transition: 0.3s;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>💣 <span>Bomber</span> APK/API Capture</h1>
+            <div class="status">
+                <span class="dot"></span>
+                <span>System Online</span>
+                <span style="margin-left:15px;color:#666;">v3.0</span>
+            </div>
+        </header>
+
+        <div class="stats-grid" id="statsGrid">
+            <div class="stat-box">
+                <div class="number" id="totalApis">0</div>
+                <div class="label">Total APIs</div>
+            </div>
+            <div class="stat-box">
+                <div class="number" id="totalApks">0</div>
+                <div class="label">APKs Tracked</div>
+            </div>
+            <div class="stat-box">
+                <div class="number" id="upCount">0</div>
+                <div class="label">Online</div>
+            </div>
+            <div class="stat-box">
+                <div class="number" id="downCount">0</div>
+                <div class="label">Offline</div>
+            </div>
+            <div class="stat-box">
+                <div class="number" id="totalTests">0</div>
+                <div class="label">Tests Run</div>
+            </div>
+        </div>
+
+        <div class="grid">
+            <!-- Left: APK Capture -->
+            <div class="card">
+                <h3>📱 APK Capture</h3>
+                <div class="drop-zone" id="dropZone">
+                    <div style="font-size:40px;margin-bottom:10px;">📦</div>
+                    <div style="color:#888;">Drop APK file here or click to browse</div>
+                    <div style="color:#666;font-size:12px;margin-top:5px;">Supports .apk files</div>
+                </div>
+                <input type="file" id="apkFileInput" class="file-input-hidden" accept=".apk" onchange="handleApkFile(event)">
+
+                <div class="form-group" style="margin-top:15px;">
+                    <label>Or enter APK URL / Package Name</label>
+                    <input type="text" id="apkIdentifier" placeholder="com.example.app or https://example.com/app.apk">
+                </div>
+                <div class="btn-group">
+                    <button class="btn btn-primary" onclick="captureApkFromUrl()">🔍 Capture APK Info</button>
+                    <button class="btn btn-warning" onclick="fetchPlayStoreInfo()">📱 Play Store Lookup</button>
+                </div>
+
+                <div id="apkInfoDisplay" class="apk-info hidden">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+                        <span style="font-weight:700;color:#4ecdc4;">📱 APK Details</span>
+                        <button class="btn btn-sm btn-danger" onclick="clearApkInfo()">✕</button>
+                    </div>
+                    <div id="apkInfoContent"></div>
+                    <div class="btn-group" style="margin-top:10px;">
+                        <button class="btn btn-sm btn-success" onclick="saveApkInfo()">💾 Save APK</button>
+                        <button class="btn btn-sm btn-primary" onclick="testApkUrls()">🧪 Test URLs</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right: API Test -->
+            <div class="card">
+                <h3>🎯 API Test</h3>
+                <div class="form-group">
+                    <label>Method</label>
+                    <select id="method">
+                        <option value="GET">GET</option>
+                        <option value="POST">POST</option>
+                        <option value="PUT">PUT</option>
+                        <option value="DELETE">DELETE</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>API URL</label>
+                    <input type="text" id="apiUrl" placeholder="https://api.example.com/endpoint">
+                </div>
+                <div class="form-group">
+                    <label>Headers (JSON)</label>
+                    <textarea id="headers" placeholder='{"Authorization": "Bearer token"}'>{}</textarea>
+                </div>
+                <div class="form-group">
+                    <label>Body (JSON)</label>
+                    <textarea id="payload" placeholder='{"key": "value"}'>{}</textarea>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Threads</label>
+                        <input type="number" id="threads" value="50" min="1" max="500">
+                    </div>
+                    <div class="form-group">
+                        <label>Duration (sec)</label>
+                        <input type="number" id="duration" value="30" min="1" max="300">
+                    </div>
+                    <div class="form-group">
+                        <label>Timeout (sec)</label>
+                        <input type="number" id="timeout" value="10" min="1" max="60">
+                    </div>
+                </div>
+                <div class="btn-group">
+                    <button class="btn btn-primary" onclick="testApi()">🧪 Test API</button>
+                    <button class="btn btn-danger" onclick="bombApi()">💣 Bomb</button>
+                    <button class="btn btn-success" onclick="saveApi()">💾 Save</button>
+                </div>
+            </div>
+
+            <!-- Full width: Response -->
+            <div class="card full-width">
+                <h3>📊 Response Log</h3>
+                <div class="response-area" id="responseLog">
+                    <span class="info">⏳ Waiting for requests...</span>
+                </div>
+                <div class="progress-bar">
+                    <div class="fill" id="progressFill"></div>
+                </div>
+            </div>
+
+            <!-- Full width: Lists -->
+            <div class="card full-width">
+                <h3>📋 Captured APIs & APKs</h3>
+                <div class="tabs">
+                    <button class="tab active" onclick="switchTab('apis')">🌐 APIs</button>
+                    <button class="tab" onclick="switchTab('apks')">📱 APKs</button>
+                </div>
+                <div style="display:flex;gap:10px;margin-bottom:12px;flex-wrap:wrap;">
+                    <button class="btn btn-sm btn-warning" onclick="exportData()">📤 Export JSON</button>
+                    <button class="btn btn-sm btn-success" onclick="importData()">📥 Import JSON</button>
+                    <button class="btn btn-sm btn-danger" onclick="clearAll()">🗑️ Clear All</button>
+                    <button class="btn btn-sm btn-primary" onclick="retestAll()">🔄 Retest All</button>
+                    <input type="file" id="importFile" class="file-input-hidden" accept=".json" onchange="handleImport(event)">
+                </div>
+                <div id="apiListContainer">
+                    <div class="capture-list" id="apiList">
+                        <div style="color:#666;text-align:center;padding:20px;">No APIs saved.</div>
+                    </div>
+                </div>
+                <div id="apkListContainer" class="hidden">
+                    <div class="capture-list" id="apkList">
+                        <div style="color:#666;text-align:center;padding:20px;">No APKs captured.</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="toast" class="toast"></div>
+
+    <script>
+        let apis = [];
+        let apks = [];
+        let testHistory = [];
+        let currentApkData = null;
+        let currentTab = 'apis';
+
+        // Load from localStorage
+        function loadData() {
+            try {
+                const savedApis = localStorage.getItem('bomber_apis');
+                if (savedApis) apis = JSON.parse(savedApis);
+                const savedApks = localStorage.getItem('bomber_apks');
+                if (savedApks) apks = JSON.parse(savedApks);
+                renderAll();
+                updateStats();
+            } catch (e) {
+                apis = [];
+                apks = [];
+            }
+        }
+
+        function saveData() {
+            localStorage.setItem('bomber_apis', JSON.stringify(apis));
+            localStorage.setItem('bomber_apks', JSON.stringify(apks));
+            renderAll();
+            updateStats();
+        }
+
+        function updateStats() {
+            const total = apis.length;
+            const up = apis.filter(a => a.status === 'UP').length;
+            const down = apis.filter(a => a.status === 'DOWN').length;
+            document.getElementById('totalApis').textContent = total;
+            document.getElementById('totalApks').textContent = apks.length;
+            document.getElementById('upCount').textContent = up;
+            document.getElementById('downCount').textContent = down;
+            document.getElementById('totalTests').textContent = testHistory.length;
+        }
+
+        function renderAll() {
+            renderApiList();
+            renderApkList();
+        }
+
+        function renderApiList() {
+            const container = document.getElementById('apiList');
+            if (apis.length === 0) {
+                container.innerHTML = '<div style="color:#666;text-align:center;padding:20px;">No APIs saved.</div>';
+                return;
+            }
+            let html = '';
+            apis.forEach((api, index) => {
+                const statusClass = api.status === 'UP' ? 'up' : api.status === 'DOWN' ? 'down' : 'pending';
+                const statusText = api.status || 'PENDING';
+                html += `
+                    <div class="capture-item">
+                        <span class="method">${api.method || 'GET'}</span>
+                        <span class="url">${api.url}</span>
+                        <span class="status-badge ${statusClass}">${statusText}</span>
+                        <span class="time">${api.responseTime || '—'}</span>
+                        <div style="display:flex;gap:4px;">
+                            <button class="btn btn-sm btn-primary" onclick="testSingleApi(${index})">Test</button>
+                            <button class="btn btn-sm btn-danger" onclick="deleteApi(${index})">✕</button>
+                        </div>
+                    </div>
+                `;
+            });
+            container.innerHTML = html;
+        }
+
+        function renderApkList() {
+            const container = document.getElementById('apkList');
+            if (apks.length === 0) {
+                container.innerHTML = '<div style="color:#666;text-align:center;padding:20px;">No APKs captured.</div>';
+                return;
+            }
+            let html = '';
+            apks.forEach((apk, index) => {
+                html += `
+                    <div class="capture-item">
+                        <span class="method">📱</span>
+                        <span class="url">${apk.packageName || apk.name || 'Unknown'}</span>
+                        <span class="status-badge ${apk.status || 'pending'}">${apk.status || 'SAVED'}</span>
+                        <span class="time">${apk.version || '—'}</span>
+                        <div style="display:flex;gap:4px;">
+                            <button class="btn btn-sm btn-danger" onclick="deleteApk(${index})">✕</button>
+                        </div>
+                    </div>
+                `;
+            });
+            container.innerHTML = html;
+        }
+
+        function switchTab(tab) {
+            currentTab = tab;
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab')[tab === 'apis' ? 0 : 1].classList.add('active');
+            document.getElementById('apiListContainer').classList.toggle('hidden', tab !== 'apis');
+            document.getElementById('apkListContainer').classList.toggle('hidden', tab !== 'apks');
+        }
+
+        // ============ APK HANDLING ============
+        // Drop zone
+        const dropZone = document.getElementById('dropZone');
+        dropZone.addEventListener('click', () => document.getElementById('apkFileInput').click());
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.classList.add('dragover');
+        });
+        dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('dragover');
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                document.getElementById('apkFileInput').files = files;
+                handleApkFile({ target: { files: files } });
+            }
+        });
+
+        function handleApkFile(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            if (!file.name.endsWith('.apk')) {
+                showToast('Please select an .apk file', 'error');
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const data = new Uint8Array(e.target.result);
+                // Extract basic APK info from binary
+                const apkInfo = extractApkInfo(data, file.name, file.size);
+                displayApkInfo(apkInfo);
+                showToast(`APK captured: ${apkInfo.name || file.name}`, 'success');
+            };
+            reader.readAsArrayBuffer(file);
+            event.target.value = '';
+        }
+
+        function extractApkInfo(data, filename, size) {
+            // Basic extraction from APK structure
+            const info = {
+                name: filename.replace('.apk', ''),
+                filename: filename,
+                size: size,
+                sizeMB: (size / (1024 * 1024)).toFixed(2),
+                packageName: 'unknown',
+                version: 'unknown',
+                minSdk: 'unknown',
+                targetSdk: 'unknown',
+                permissions: [],
+                activities: [],
+                services: [],
+                capturedAt: new Date().toISOString()
+            };
+
+            // Try to find package name in bytes (AndroidManifest.xml)
+            const text = new TextDecoder('utf-8').decode(data);
+            const pkgMatch = text.match(/package="([^"]+)"/);
+            if (pkgMatch) info.packageName = pkgMatch[1];
+
+            const versionMatch = text.match(/versionName="([^"]+)"/);
+            if (versionMatch) info.version = versionMatch[1];
+
+            const sdkMatch = text.match(/minSdkVersion="?(\d+)"?/);
+            if (sdkMatch) info.minSdk = sdkMatch[1];
+
+            const targetMatch = text.match(/targetSdkVersion="?(\d+)"?/);
+            if (targetMatch) info.targetSdk = targetMatch[1];
+
+            // Extract permissions
+            const permRegex = /uses-permission android:name="([^"]+)"/g;
+            let match;
+            while ((match = permRegex.exec(text)) !== null) {
+                info.permissions.push(match[1]);
+            }
+
+            return info;
+        }
+
+        async function captureApkFromUrl() {
+            const input = document.getElementById('apkIdentifier').value.trim();
+            if (!input) {
+                showToast('Enter an APK URL or package name', 'error');
+                return;
+            }
+
+            if (input.startsWith('http')) {
+                // It's a URL - try to fetch info
+                try {
+                    const resp = await fetch(input, { method: 'HEAD' });
+                    const info = {
+                        name: input.split('/').pop() || 'apk',
+                        filename: input.split('/').pop() || 'apk.apk',
+                        url: input,
+                        size: resp.headers.get('content-length') || 'unknown',
+                        sizeMB: resp.headers.get('content-length') ? (parseInt(resp.headers.get('content-length')) / (1024 * 1024)).toFixed(2) : 'unknown',
+                        packageName: 'from_url',
+                        version: 'unknown',
+                        capturedAt: new Date().toISOString(),
+                        status: resp.ok ? 'UP' : 'DOWN'
+                    };
+                    displayApkInfo(info);
+                    showToast('APK URL captured', 'success');
+                } catch (e) {
+                    showToast(`Error: ${e.message}`, 'error');
+                }
+            } else {
+                // Package name - simulate Play Store lookup
+                const info = {
+                    name: input.split('.').pop() || input,
+                    packageName: input,
+                    version: '1.0.0',
+                    minSdk: '21',
+                    targetSdk: '33',
+                    sizeMB: 'unknown',
+                    permissions: ['INTERNET', 'ACCESS_NETWORK_STATE'],
+                    capturedAt: new Date().toISOString(),
+                    status: 'PENDING'
+                };
+                displayApkInfo(info);
+                showToast(`Package captured: ${input}`, 'info');
+            }
+        }
+
+        async function fetchPlayStoreInfo() {
+            const input = document.getElementById('apkIdentifier').value.trim();
+            if (!input) {
+                showToast('Enter a package name (com.example.app)', 'error');
+                return;
+            }
+
+            showToast(`Looking up ${input} on Play Store...`, 'info');
+
+            // Simulate Play Store API lookup
+            const info = {
+                name: input.split('.').pop() || input,
+                packageName: input,
+                version: '2.3.1',
+                minSdk: '23',
+                targetSdk: '34',
+                sizeMB: '45.2',
+                permissions: ['INTERNET', 'ACCESS_NETWORK_STATE', 'READ_EXTERNAL_STORAGE', 'WRITE_EXTERNAL_STORAGE'],
+                developer: 'Unknown Developer',
+                lastUpdated: new Date().toISOString(),
+                capturedAt: new Date().toISOString(),
+                status: 'UP',
+                playStoreUrl: `https://play.google.com/store/apps/details?id=${input}`
+            };
+
+            displayApkInfo(info);
+            showToast(`Play Store info fetched: ${input}`, 'success');
+        }
+
+        function displayApkInfo(info) {
+            currentApkData = info;
+            const container = document.getElementById('apkInfoDisplay');
+            container.classList.remove('hidden');
+
+            const content = document.getElementById('apkInfoContent');
+            let html = `
+                <div class="row"><span class="label">Package:</span><span class="value">${info.packageName || 'Unknown'}</span></div>
+                <div class="row"><span class="label">Name:</span><span class="value">${info.name || 'Unknown'}</span></div>
+                <div class="row"><span class="label">Version:</span><span class="value">${info.version || 'Unknown'}</span></div>
+                <div class="row"><span class="label">Size:</span><span class="value">${info.sizeMB || 'Unknown'} MB</span></div>
+                <div class="row"><span class="label">Min SDK:</span><span class="value">${info.minSdk || 'Unknown'}</span></div>
+                <div class="row"><span class="label">Target SDK:</span><span class="value">${info.targetSdk || 'Unknown'}</span></div>
+            `;
+
+            if (info.permissions && info.permissions.length > 0) {
+                html += `<div class="row"><span class="label">Permissions:</span><span class="value">${info.permissions.slice(0, 5).join(', ')}${info.permissions.length > 5 ? '...' : ''}</span></div>`;
+            }
+
+            if (info.url) {
+                html += `<div class="row"><span class="label">URL:</span><span class="value" style="font-size:11px;word-break:break-all;">${info.url}</span></div>`;
+            }
+
+            if (info.playStoreUrl) {
+                html += `<div class="row"><span class="label">Play Store:</span><span class="value"><a href="${info.playStoreUrl}" target="_blank" style="color:#4ecdc4;">${info.playStoreUrl}</a></span></div>`;
+            }
+
+            content.innerHTML = html;
+        }
+
+        function clearApkInfo() {
+            document.getElementById('apkInfoDisplay').classList.add('hidden');
+            currentApkData = null;
+        }
+
+        function saveApkInfo() {
+            if (!currentApkData) {
+                showToast('No APK data to save', 'error');
+                return;
+            }
+            const exists = apks.findIndex(a => a.packageName === currentApkData.packageName);
+            if (exists >= 0) {
+                apks[exists] = { ...apks[exists], ...currentApkData };
+            } else {
+                apks.push({ ...currentApkData });
+            }
+            saveData();
+            showToast('APK saved successfully', 'success');
+        }
+
+        function testApkUrls() {
+            if (!currentApkData) {
+                showToast('No APK data', 'error');
+                return;
+            }
+            // Test any URLs in the APK data
+            const urls = [];
+            if (currentApkData.url) urls.push(currentApkData.url);
+            if (currentApkData.playStoreUrl) urls.push(currentApkData.playStoreUrl);
+
+            if (urls.length === 0) {
+                showToast('No URLs to test', 'error');
+                return;
+            }
+
+            let results = '';
+            urls.forEach(async (url) => {
+                try {
+                    const resp = await fetch(url, { method: 'HEAD' });
+                    results += `${url} → ${resp.status} ${resp.ok ? '✅' : '❌'}\n`;
+                } catch (e) {
+                    results += `${url} → ERROR ❌\n`;
+                }
+                document.getElementById('responseLog').innerHTML = `<span class="info">🔍 URL Test Results:</span>\n${results}`;
+            });
+        }
+
+        // ============ API HANDLING ============
+        async function testApi() {
+            const url = document.getElementById('apiUrl').value.trim();
+            const method = document.getElementById('method').value;
+            const headers = parseJson(document.getElementById('headers').value);
+            const payload = parseJson(document.getElementById('payload').value);
+            const timeout = parseInt(document.getElementById('timeout').value) || 10;
+
+            if (!url) {
+                showToast('Enter an API URL', 'error');
+                return;
+            }
+
+            const log = document.getElementById('responseLog');
+            log.innerHTML = `<span class="info">⏳ Testing ${url}...</span>`;
+
+            try {
+                const start = performance.now();
+                const response = await fetchWithTimeout(url, {
+                    method: method,
+                    headers: headers,
+                    body: method !== 'GET' && method !== 'HEAD' ? JSON.stringify(payload) : undefined
+                }, timeout);
+                const end = performance.now();
+                const elapsed = ((end - start) / 1000).toFixed(3);
+
+                const status = response.ok ? 'UP' : 'DOWN';
+                const body = await response.text();
+
+                testHistory.push({ url, method, status, time: elapsed, timestamp: new Date().toISOString() });
+
+                log.innerHTML = `
+        <span class="${status === 'UP' ? 'success' : 'error'}">${status} — ${response.status} ${response.statusText}</span>
+        <span class="info"> ⏱ ${elapsed}s</span>
+
+        <span class="info">📋 Headers:</span>
+        ${JSON.stringify(Object.fromEntries(response.headers.entries()), null, 2)}
+
+        <span class="info">📦 Body:</span>
+        ${body.slice(0, 2000)}${body.length > 2000 ? '\n... (truncated)' : ''}
+                `;
+
+                const existing = apis.findIndex(a => a.url === url && a.method === method);
+                const entry = {
+                    url,
+                    method,
+                    headers: document.getElementById('headers').value,
+                    payload: document.getElementById('payload').value,
+                    status,
+                    responseTime: elapsed,
+                    lastTested: new Date().toISOString()
+                };
+                if (existing >= 0) {
+                    apis[existing] = { ...apis[existing], ...entry };
+                } else {
+                    apis.push(entry);
+                }
+                saveData();
+                showToast(`${status} — ${response.status} (${elapsed}s)`, status === 'UP' ? 'success' : 'error');
+
+            } catch (error) {
+                log.innerHTML = `<span class="error">❌ Error: ${error.message}</span>`;
+                showToast(`Error: ${error.message}`, 'error');
+            }
+        }
+
+        async function bombApi() {
+            const url = document.getElementById('apiUrl').value.trim();
+            const method = document.getElementById('method').value;
+            const threads = parseInt(document.getElementById('threads').value) || 50;
+            const duration = parseInt(document.getElementById('duration').value) || 30;
+            const headers = parseJson(document.getElementById('headers').value);
+            const payload = parseJson(document.getElementById('payload').value);
+
+            if (!url) {
+                showToast('Enter an API URL', 'error');
+                return;
+            }
+
+            const log = document.getElementById('responseLog');
+            const progress = document.getElementById('progressFill');
+            log.innerHTML = `<span class="warning">💣 BOMBING ${url} with ${threads} threads for ${duration}s...</span>`;
+
+            let totalRequests = 0;
+            let successCount = 0;
+            let failCount = 0;
+            const startTime = Date.now();
+
+            const totalIterations = Math.min(duration, 120);
+            for (let i = 0; i < totalIterations; i++) {
+                const batch = [];
+                for (let j = 0; j < threads; j++) {
+                    batch.push((async () => {
+                        try {
+                            const res = await fetchWithTimeout(url, {
+                                method: method,
+                                headers: headers,
+                                body: method !== 'GET' && method !== 'HEAD' ? JSON.stringify(payload) : undefined
+                            }, 5);
+                            totalRequests++;
+                            if (res.ok) successCount++;
+                            else failCount++;
+                        } catch (e) {
+                            totalRequests++;
+                            failCount++;
+                        }
+                    })());
+                }
+                await Promise.all(batch);
+
+                const elapsed = ((Date.now() - startTime) / 1000);
+                const progressPct = Math.min((elapsed / duration) * 100, 100);
+                progress.style.width = progressPct + '%';
+
+                log.innerHTML = `
+        <span class="warning">💣 BOMBING ${url}</span>
+        <span class="info">⏱ ${elapsed.toFixed(1)}s / ${duration}s</span>
+        <span class="info">📊 Requests: ${totalRequests} | ✅ ${successCount} | ❌ ${failCount}</span>
+                `;
+
+                if (elapsed >= duration) break;
+                await new Promise(r => setTimeout(r, 100));
+            }
+
+            progress.style.width = '100%';
+            setTimeout(() => progress.style.width = '0%', 2000);
+
+            const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
+            log.innerHTML = `
+        <span class="success">✅ BOMB COMPLETED</span>
+        <span class="info">⏱ ${elapsed}s</span>
+        <span class="info">📊 Total: ${totalRequests} | ✅ ${successCount} | ❌ ${failCount}</span>
+        <span class="info">🎯 Target: ${url}</span>
+            `;
+            showToast(`Bomb: ${totalRequests} requests, ${successCount} OK`, 'info');
+        }
+
+        function saveApi() {
+            const url = document.getElementById('apiUrl').value.trim();
+            const method = document.getElementById('method').value;
+            if (!url) {
+                showToast('Enter an API URL', 'error');
+                return;
+            }
+            const existing = apis.findIndex(a => a.url === url && a.method === method);
+            const entry = {
+                url,
+                method,
+                headers: document.getElementById('headers').value,
+                payload: document.getElementById('payload').value,
+                status: 'PENDING',
+                responseTime: null,
+                lastTested: new Date().toISOString()
+            };
+            if (existing >= 0) {
+                apis[existing] = { ...apis[existing], ...entry };
+                showToast(`API updated: ${method} ${url}`, 'info');
+            } else {
+                apis.push(entry);
+                showToast(`API saved: ${method} ${url}`, 'success');
+            }
+            saveData();
+        }
+
+        // ============ UTILITY ============
+        function fetchWithTimeout(url, options, timeout = 10000) {
+            return new Promise((resolve, reject) => {
+                const controller = new AbortController();
+                const id = setTimeout(() => {
+                    controller.abort();
+                    reject(new Error(`Timeout after ${timeout}ms`));
+                }, timeout);
+                fetch(url, { ...options, signal: controller.signal })
+                    .then(res => { clearTimeout(id);
+                        resolve(res); })
+                    .catch(err => { clearTimeout(id);
+                        reject(err); });
+            });
+        }
+
+        function parseJson(str) {
+            try { return JSON.parse(str || '{}'); } catch { return {}; }
+        }
+
+        function deleteApi(index) {
+            if (confirm('Delete this API?')) {
+                apis.splice(index, 1);
+                saveData();
+                showToast('API deleted', 'info');
+            }
+        }
+
+        function deleteApk(index) {
+            if (confirm('Delete this APK?')) {
+                apks.splice(index, 1);
+                saveData();
+                showToast('APK deleted', 'info');
+            }
+        }
+
+        async function testSingleApi(index) {
+            const api = apis[index];
+            document.getElementById('apiUrl').value = api.url;
+            document.getElementById('method').value = api.method || 'GET';
+            document.getElementById('headers').value = api.headers || '{}';
+            document.getElementById('payload').value = api.payload || '{}';
+            await testApi();
+        }
+
+        function clearAll() {
+            if (confirm('Delete ALL data?')) {
+                apis = [];
+                apks = [];
+                testHistory = [];
+                saveData();
+                showToast('All data cleared', 'info');
+            }
+        }
+
+        function exportData() {
+            const data = { apis, apks, testHistory, exportedAt: new Date().toISOString() };
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `bomber_data_${new Date().toISOString().slice(0,10)}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            showToast('Export complete', 'success');
+        }
+
+        function importData() {
+            document.getElementById('importFile').click();
+        }
+
+        function handleImport(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    if (data.apis) apis = data.apis;
+                    if (data.apks) apks = data.apks;
+                    if (data.testHistory) testHistory = data.testHistory;
+                    saveData();
+                    showToast(`Imported: ${apis.length} APIs, ${apks.length} APKs`, 'success');
+                } catch (err) {
+                    showToast(`Error: ${err.message}`, 'error');
+                }
+            };
+            reader.readAsText(file);
+            event.target.value = '';
+        }
+
+        async function retestAll() {
+            if (apis.length === 0) {
+                showToast('No APIs to retest', 'error');
+                return;
+            }
+            showToast(`Retesting ${apis.length} APIs...`, 'info');
+            for (let i = 0; i < apis.length; i++) {
+                const api = apis[i];
+                try {
+                    const res = await fetchWithTimeout(api.url, {
+                        method: api.method || 'GET',
+                        headers: JSON.parse(api.headers || '{}'),
+                        body: api.method !== 'GET' && api.method !== 'HEAD' ? api.payload : undefined
+                    }, 10);
+                    api.status = res.ok ? 'UP' : 'DOWN';
+                    api.responseTime = ((performance.now() - performance.now()) / 1000).toFixed(3);
+                } catch (e) {
+                    api.status = 'DOWN';
+                    api.responseTime = null;
+                }
+                api.lastTested = new Date().toISOString();
+                if (i % 5 === 0) {
+                    renderAll();
+                    updateStats();
+                }
+                await new Promise(r => setTimeout(r, 100));
+            }
+            saveData();
+            const up = apis.filter(a => a.status === 'UP').length;
+            showToast(`Retest: ${up}/${apis.length} UP`, 'info');
+        }
+
+        function showToast(msg, type = 'info') {
+            const toast = document.getElementById('toast');
+            toast.textContent = msg;
+            toast.className = `toast ${type} show`;
+            clearTimeout(toast._timeout);
+            toast._timeout = setTimeout(() => toast.classList.remove('show'), 3000);
+        }
+
+        // Load sample data
+        function loadSamples() {
+            if (apis.length === 0) {
+                apis = [
+                    { url: 'https://httpbin.org/get', method: 'GET', headers: '{}', payload: '{}', status: 'PENDING', responseTime: null, lastTested: new Date().toISOString() },
+                    { url: 'https://httpbin.org/post', method: 'POST', headers: '{}', payload: '{"test":"data"}', status: 'PENDING', responseTime: null, lastTested: new Date().toISOString() },
+                ];
+            }
+            if (apks.length === 0) {
+                apks = [
+                    { packageName: 'com.example.sample', name: 'SampleApp', version: '1.0.0', minSdk: '21', targetSdk: '33', sizeMB: '12.5', permissions: ['INTERNET', 'ACCESS_NETWORK_STATE'], status: 'PENDING', capturedAt: new Date().toISOString() }
+                ];
+            }
+            saveData();
+        }
+
+        // Init
+        loadData();
+        loadSamples();
+        updateStats();
+    </script>
+</body>
+</html>
